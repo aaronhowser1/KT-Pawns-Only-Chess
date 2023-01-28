@@ -117,27 +117,39 @@ fun setPiece(location: String, piece: Char) {
 fun getPossibleDestinations(location: String): Array<String> {
     val piece = getPiece(location)
 
-    return when (piece) {
-        'B' ->
-            if (location[1] == '7') {
-                arrayOf(
-                    "${location[0]}6",
-                    "${location[0]}5"
-                )
-            } else {
-                arrayOf("${location[0]}${location[1]-1}")
-            }
-        'W' ->
-            if (location[1] == '2') {
-                arrayOf(
-                    "${location[0]}3",
-                    "${location[0]}4"
-                )
-            } else {
-                arrayOf("${location[0]}${location[1]+1}")
-            }
-        else -> arrayOf()
-    }
+    val firstMoves: Array<String> = if (piece == 'W') {
+        if (location[1] == '2') {
+            arrayOf(
+                "${location[0]}3",
+                "${location[0]}4"
+            )
+        } else {
+            arrayOf("${location[0]}${location[1]+1}")
+        }
+    } else if (piece == 'B'){
+        if (location[1] == '7') {
+            arrayOf(
+                "${location[0]}6",
+                "${location[0]}5"
+            )
+        } else {
+            arrayOf("${location[0]}${location[1]-1}")
+        }
+    } else arrayOf()
+
+    val secondMoves: Array<String> = if (piece == 'W') {
+        val nextRow = location[1]+1
+        if (getPiece("${location[0]}$nextRow") == ' ') {
+            arrayOf("${location[0]}$nextRow")
+        } else arrayOf()
+    } else arrayOf()
+
+    val capturing: Array<String> = arrayOf()
+
+    val enPassant: Array<String> = arrayOf()
+
+    return firstMoves.plus(secondMoves).plus(capturing).plus(enPassant)
+
 }
 
 fun regexToLocation(location: String): Array<Int> {
