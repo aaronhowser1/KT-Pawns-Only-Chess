@@ -4,16 +4,16 @@ package chess
 // on the board the lowest is at bottom
 val cb = mutableListOf(
     mutableListOf(' ',' ',' ',' ',' ',' ',' ',' '),
-    mutableListOf('W',' ','W','W','W','W','W','W'),
+    mutableListOf('W','W','W','W','W','W','W','W'),
     mutableListOf(' ',' ',' ',' ',' ',' ',' ',' '),
-    mutableListOf(' ','W',' ',' ',' ',' ',' ',' '),
+    mutableListOf(' ',' ',' ',' ',' ',' ',' ',' '),
     mutableListOf(' ',' ',' ',' ',' ',' ',' ',' '),
     mutableListOf(' ',' ',' ',' ',' ',' ',' ',' '),
     mutableListOf('B','B','B','B','B','B','B','B'),
     mutableListOf(' ',' ',' ',' ',' ',' ',' ',' ')
 )
 
-var prevCB = cb
+var prevCB = cb.toCollection(mutableListOf())
 
 var playerOnesTurn = true
 
@@ -44,33 +44,33 @@ fun showMenu() {
     }
 }
 
-fun drawChessboard() {
+fun drawChessboard(board: MutableList<MutableList<Char>> = cb) {
     val line = "+---+---+---+---+---+---+---+---+"
 
     println("""
   $line
-${getLine(8)}
+${getLine(8, board)}
   $line
-${getLine(7)}
+${getLine(7, board)}
   $line
-${getLine(6)}
+${getLine(6, board)}
   $line
-${getLine(5)}
+${getLine(5, board)}
   $line
-${getLine(4)}
+${getLine(4, board)}
   $line
-${getLine(3)}
+${getLine(3, board)}
   $line
-${getLine(2)}
+${getLine(2, board)}
   $line
-${getLine(1)}
+${getLine(1, board)}
   $line
     a   b   c   d   e   f   g   h
     """.trimIndent())
 }
 
-fun getLine(line: Int): String {
-    return "$line | ${cb[line-1].joinToString(" | ")} |"
+fun getLine(line: Int, board: MutableList<MutableList<Char>>): String {
+    return "$line | ${board[line-1].joinToString(" | ")} |"
 }
 
 fun inputFromPrompt(prompt: String): String {
@@ -92,9 +92,14 @@ fun makeMove(move: String) {
                 //En Passant
                 if (origin.first() != destination.first()) setPiece("${destination[0]}${origin[1]}",' ')
 
-                drawChessboard()
+                println("Previous cb")
+                drawChessboard(prevCB)
+                println("Current cb")
+                drawChessboard(cb)
                 playerOnesTurn = !playerOnesTurn
                 prevCB = cb
+                println("New previous cb")
+                drawChessboard(prevCB)
             } else {
                 println("Invalid Input")
             }
