@@ -132,25 +132,15 @@ fun getPossibleDestinations(origin: String): Array<String> {
     val twoForward = "${pieceX}${pieceY + (if (piece == 'W') 2 else -2)}"
 
     //Two forward or one forward, if first move
-    val firstMoves: Array<String> = if (piece == 'W') {
-        if (origin[1] == '2') {
-            arrayOf(
-                oneForward,
-                twoForward
-            )
-        } else {
-            arrayOf(oneForward)
+    val firstMoves: Array<String> =
+
+        if (getPiece(oneForward) != ' ') arrayOf() else {
+            when (piece) {
+                'W' -> if (pieceY == '2') arrayOf(oneForward,twoForward) else arrayOf(oneForward)
+                'B' -> if (pieceY == '7') arrayOf(oneForward,twoForward) else arrayOf(oneForward)
+                else -> arrayOf()
+            }
         }
-    } else if (piece == 'B'){
-        if (origin[1] == '7') {
-            arrayOf(
-                "${origin[0]}6",
-                "${origin[0]}5"
-            )
-        } else {
-            arrayOf("${origin[0]}${origin[1]-1}")
-        }
-    } else arrayOf()
 
     //One forward, anywhere
     val secondMoves: Array<String> = if (piece != ' ' && getPiece(oneForward) == ' ') {
