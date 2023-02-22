@@ -13,7 +13,7 @@ val cb = mutableListOf(
     mutableListOf(' ',' ',' ',' ',' ',' ',' ',' ')
 )
 
-var prevCB = cb.toCollection(mutableListOf())
+var prevCB = copyBoard(cb)
 
 var playerOnesTurn = true
 
@@ -92,14 +92,9 @@ fun makeMove(move: String) {
                 //En Passant
                 if (origin.first() != destination.first()) setPiece("${destination[0]}${origin[1]}",' ')
 
-                println("Previous cb")
-                drawChessboard(prevCB)
-                println("Current cb")
                 drawChessboard(cb)
                 playerOnesTurn = !playerOnesTurn
-                prevCB = cb
-                println("New previous cb")
-                drawChessboard(prevCB)
+                prevCB = copyBoard(cb)
             } else {
                 println("Invalid Input")
             }
@@ -227,4 +222,16 @@ fun regexToLocation(location: String): Array<Int> {
     } else {
         arrayOf()
     }
+}
+
+fun copyBoard(board: MutableList<MutableList<Char>>): MutableList<MutableList<Char>> {
+    val boardCopy = mutableListOf<MutableList<Char>>()
+
+    for (list in board) {
+        val tempList = mutableListOf<Char>()
+        for (char in list) tempList.add(char)
+        boardCopy.add(tempList)
+    }
+
+    return boardCopy
 }
