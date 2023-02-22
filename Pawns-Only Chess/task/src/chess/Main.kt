@@ -4,9 +4,9 @@ package chess
 // on the board the lowest is at bottom
 val cb = mutableListOf(
     mutableListOf(' ',' ',' ',' ',' ',' ',' ',' '),
-    mutableListOf('W','W','W','W','W','W','W','W'),
+    mutableListOf('W',' ','W','W','W','W','W','W'),
     mutableListOf(' ',' ',' ',' ',' ',' ',' ',' '),
-    mutableListOf(' ',' ',' ',' ',' ',' ',' ',' '),
+    mutableListOf(' ','W',' ',' ',' ',' ',' ',' '),
     mutableListOf(' ',' ',' ',' ',' ',' ',' ',' '),
     mutableListOf(' ',' ',' ',' ',' ',' ',' ',' '),
     mutableListOf('B','B','B','B','B','B','B','B'),
@@ -86,11 +86,15 @@ fun makeMove(move: String) {
 
         if (currentPiece == getPiece(origin)) {
             if (getPossibleDestinations(origin).contains(destination)) {
-                prevCB = cb
                 setPiece(origin,' ')
                 setPiece(destination, currentPiece)
+
+                //En Passant
+                if (origin.first() != destination.first()) setPiece("${destination[0]}${origin[1]}",' ')
+
                 drawChessboard()
                 playerOnesTurn = !playerOnesTurn
+                prevCB = cb
             } else {
                 println("Invalid Input")
             }
@@ -126,6 +130,8 @@ fun getPossibleDestinations(origin: String): Array<String> {
     val pieceY = origin.last()
 
     val nextY = pieceY + if (piece == 'W') 1 else -1
+    val secondNextY = pieceY + if (piece == 'W') 2 else -2
+
 
     val leftX: Char? = if (pieceX == 'a') null else {
         columnAsChar(columnAsNumber(pieceX)-1)
@@ -134,30 +140,50 @@ fun getPossibleDestinations(origin: String): Array<String> {
         columnAsChar(columnAsNumber(pieceX)+1)
     }
 
+    val hasntMoved: Boolean = when (piece) {
+        'W' -> pieceY == '2'
+        'B' -> pieceY == '7'
+        else -> false
+    }
+
+
     val oneForward = "$pieceX$nextY"
     val twoForward = "$pieceX${pieceY + (if (piece == 'W') 2 else -2)}"
 
+    val forward: Array<String> =
+        if (getPiece(oneForward) == ' ') {
+            if (hasntMoved && getPiece(twoForward) == ' ') arrayOf(oneForward,twoForward) else arrayOf(oneForward)
+        } else arrayOf()
+
     val diagonalLeft = "$leftX$nextY"
     val diagonalRight = "$rightX$nextY"
-
-    val forward: Array<String> =
-        if (getPiece(oneForward) != ' ') arrayOf() else {
-            when (piece) {
-                'W' -> if (pieceY == '2') arrayOf(oneForward,twoForward) else arrayOf(oneForward)
-                'B' -> if (pieceY == '7') arrayOf(oneForward,twoForward) else arrayOf(oneForward)
-                else -> arrayOf()
-            }
-        }
 
     //Diagonal forward, if there's an enemy piece
     var capturingDiagonals = arrayOf<String>()
     if (!diagonalLeft.contains("null")) if (getPiece(diagonalLeft) == oppositePiece) capturingDiagonals+=arrayOf(diagonalLeft)
     if (!diagonalRight.contains("null")) if (getPiece(diagonalRight) == oppositePiece) capturingDiagonals+=arrayOf(diagonalRight)
 
-    //Diagonal forward, if there's an adjacent enemy on the current board while there's an enemy forward 2 left/right 1 just before
-    val enPassant: Array<String> = arrayOf()
+    //To be checked on prevCB, not cb
+    val enPassantLeft = "$leftX${secondNextY}"
+    val enPassantRight = "$rightX${secondNextY}"
 
-    println(forward.plus(capturingDiagonals).plus(enPassant).joinToString(" "))
+    //Diagonal forward, if there's an adjacent enemy on the current board while there's an enemy forward 2 left/right 1 just before
+    var enPassant = arrayOf<String>()
+    if (!diagonalLeft.contains("null")) {
+        if (getPiece(enPassantLeft, prevCB) == oppositePiece) {
+            if (getPiece("$leftX$pieceY") == oppositePiece) {
+                enPassant+=arrayOf(enPassantLeft)
+            }
+        }
+    }
+    if (!diagonalRight.contains("null")) {
+        if (getPiece(enPassantRight, prevCB) == oppositePiece) {
+            if (getPiece("$rightX$pieceY") == oppositePiece) {
+                enPassant+=arrayOf(enPassantRight)
+            }
+        }
+    }
+
     return forward.plus(capturingDiagonals).plus(enPassant)
 
 }
