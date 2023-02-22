@@ -17,8 +17,11 @@ var prevCB = cb
 
 var playerOnesTurn = true
 
-var currentPiece: Char = ' '
+val currentPiece: Char
     get() = if (playerOnesTurn) 'W' else 'B'
+
+val oppositePiece: Char
+    get() = if (playerOnesTurn) 'B' else 'W'
 
 fun main() {
     showMenu()
@@ -81,19 +84,13 @@ fun makeMove(move: String) {
         val origin = "${move[0]}${move[1]}"
         val destination = "${move[2]}${move[3]}"
 
-//        println(getPossibleDestinations(origin).joinToString(" "))
-
         if (currentPiece == getPiece(origin)) {
-            if (getPiece(destination) == ' ') {
-                if (getPossibleDestinations(origin).contains(destination)) {
-                    prevCB = cb
-                    setPiece(origin,' ')
-                    setPiece(destination, currentPiece)
-                    drawChessboard()
-                    playerOnesTurn = !playerOnesTurn
-                } else {
-                    println("Invalid Input")
-                }
+            if (getPossibleDestinations(origin).contains(destination)) {
+                prevCB = cb
+                setPiece(origin,' ')
+                setPiece(destination, currentPiece)
+                drawChessboard()
+                playerOnesTurn = !playerOnesTurn
             } else {
                 println("Invalid Input")
             }
@@ -106,14 +103,15 @@ fun makeMove(move: String) {
     }
 }
 
-fun getPiece(location: String): Char? {
+fun getPiece(location: String, board: MutableList<MutableList<Char>> = cb): Char? {
     val locationArray = regexToLocation(location)
     if (locationArray.isEmpty()) {
         return null
     }
     val column = locationArray[0]
     val row = locationArray[1]
-    return cb[column][row]
+
+    return if (board == cb) cb[column][row] else prevCB[column][row]
 }
 
 fun setPiece(location: String, piece: Char) {
@@ -123,17 +121,26 @@ fun setPiece(location: String, piece: Char) {
 
 fun getPossibleDestinations(origin: String): Array<String> {
     val piece = getPiece(origin)
-//    val nextRow = if (piece == 'W') origin[1]+1 else origin[1]-1
 
     val pieceX = origin.first()
     val pieceY = origin.last()
 
-    val oneForward = "${pieceX}${pieceY + (if (piece == 'W') 1 else -1)}"
-    val twoForward = "${pieceX}${pieceY + (if (piece == 'W') 2 else -2)}"
+    val nextY = pieceY + if (piece == 'W') 1 else -1
 
-    //Two forward or one forward, if first move
-    val firstMoves: Array<String> =
+    val leftX: Char? = if (pieceX == 'a') null else {
+        columnAsChar(columnAsNumber(pieceX)-1)
+    }
+    val rightX: Char? = if (pieceX == 'h') null else {
+        columnAsChar(columnAsNumber(pieceX)+1)
+    }
 
+    val oneForward = "$pieceX$nextY"
+    val twoForward = "$pieceX${pieceY + (if (piece == 'W') 2 else -2)}"
+
+    val diagonalLeft = "$leftX$nextY"
+    val diagonalRight = "$rightX$nextY"
+
+    val forward: Array<String> =
         if (getPiece(oneForward) != ' ') arrayOf() else {
             when (piece) {
                 'W' -> if (pieceY == '2') arrayOf(oneForward,twoForward) else arrayOf(oneForward)
@@ -142,54 +149,51 @@ fun getPossibleDestinations(origin: String): Array<String> {
             }
         }
 
-    //One forward, anywhere
-    val secondMoves: Array<String> = if (piece != ' ' && getPiece(oneForward) == ' ') {
-        arrayOf(oneForward)
-    } else {
-        arrayOf()
-    }
-//    val secondMoves: Array<String> = if (piece == 'W') {
-//        if (getPiece(oneForward) == ' ') {
-//            arrayOf(oneForward)
-//        } else arrayOf()
-//    } else if (piece == 'B') {
-//        if (getPiece(oneForward) == ' ') {
-//            arrayOf(oneForward)
-//        } else arrayOf()
-//    } else arrayOf()
-
     //Diagonal forward, if there's an enemy piece
-    val capturing: Array<String> = if (piece == 'W') {
-        var diagonals = arrayOf<String>()
-//        if (getPiece("") ) {}
-        arrayOf()
-
-    } else if (piece == 'B') {
-        arrayOf()
-    } else arrayOf()
+    var capturingDiagonals = arrayOf<String>()
+    if (!diagonalLeft.contains("null")) if (getPiece(diagonalLeft) == oppositePiece) capturingDiagonals+=arrayOf(diagonalLeft)
+    if (!diagonalRight.contains("null")) if (getPiece(diagonalRight) == oppositePiece) capturingDiagonals+=arrayOf(diagonalRight)
 
     //Diagonal forward, if there's an adjacent enemy on the current board while there's an enemy forward 2 left/right 1 just before
     val enPassant: Array<String> = arrayOf()
 
-    return firstMoves.plus(secondMoves).plus(capturing).plus(enPassant)
+    println(forward.plus(capturingDiagonals).plus(enPassant).joinToString(" "))
+    return forward.plus(capturingDiagonals).plus(enPassant)
 
 }
 
+fun columnAsNumber(column: Char): Int {
+    return when (column) {
+        'a' -> 0
+        'b' -> 1
+        'c' -> 2
+        'd' -> 3
+        'e' -> 4
+        'f' -> 5
+        'g' -> 6
+        else -> 7
+    }
+}
+
+fun columnAsChar(column: Int): Char {
+    return when (column) {
+        0 -> 'a'
+        1 -> 'b'
+        2 -> 'c'
+        3 -> 'd'
+        4 -> 'e'
+        5 -> 'f'
+        6 -> 'g'
+        else -> 'h'
+    }
+}
+
 fun regexToLocation(location: String): Array<Int> {
-    if (location.matches(Regex("[a-h][1-8]"))) {
-        val column = when (location[0]) {
-            'a' -> 0
-            'b' -> 1
-            'c' -> 2
-            'd' -> 3
-            'e' -> 4
-            'f' -> 5
-            'g' -> 6
-            else -> 7
-        }
+    return if (location.matches(Regex("[a-h][1-8]"))) {
+        val column = columnAsNumber(location[0])
         val row = location[1].digitToInt() - 1
-        return arrayOf(row,column)
+        arrayOf(row,column)
     } else {
-        return arrayOf()
+        arrayOf()
     }
 }
