@@ -4,10 +4,10 @@ package chess
 // on the board the lowest is at bottom
 val cb = mutableListOf(
     mutableListOf(' ',' ',' ',' ',' ',' ',' ',' '),
-    mutableListOf('W',' ','W','W','W','W','W','W'),
+    mutableListOf('W','W','W','W','W','W','W','W'),
     mutableListOf(' ',' ',' ',' ',' ',' ',' ',' '),
     mutableListOf(' ',' ',' ',' ',' ',' ',' ',' '),
-    mutableListOf(' ','W',' ',' ',' ',' ',' ',' '),
+    mutableListOf(' ',' ',' ',' ',' ',' ',' ',' '),
     mutableListOf(' ',' ',' ',' ',' ',' ',' ',' '),
     mutableListOf('B','B','B','B','B','B','B','B'),
     mutableListOf(' ',' ',' ',' ',' ',' ',' ',' ')
@@ -16,7 +16,6 @@ val cb = mutableListOf(
 var prevCB = copyBoard(cb)
 
 var playerOnesTurn = true
-var enPassanted = false
 
 val currentPiece: Char
     get() = if (playerOnesTurn) 'W' else 'B'
@@ -86,10 +85,20 @@ fun makeMove(move: String) {
         val destination = "${move[2]}${move[3]}"
 
         if (currentPiece == getPiece(origin)) {
-            if (getPossibleDestinations(origin).contains(destination)) {
+
+            val possibleDestinations = getPossibleDestinations(origin)
+            val possibleEnPassants = getPossibleEnPassants(origin)
+
+            if (possibleDestinations.contains(destination)) {
                 prevCB = copyBoard(cb)
                 setPiece(origin,' ')
                 setPiece(destination, currentPiece)
+
+                if (possibleEnPassants.contains(destination)) {
+                    val destinationX = destination.first()
+                    val originY = origin.last()
+                    setPiece("$destinationX$originY", ' ')
+                }
 
                 drawChessboard(cb)
                 playerOnesTurn = !playerOnesTurn
@@ -121,22 +130,17 @@ fun setPiece(location: String, piece: Char) {
     cb[locationArray[0]][locationArray[1]] = piece
 }
 
+fun getNextY(currentY: Int, piece: Char?): Int {
+    return currentY + if (piece == 'W') 1 else -1
+}
+
 fun getPossibleForwards(origin: String): Array<String> {
     val piece = getPiece(origin)
 
     val pieceX = origin.first()
     val pieceY = origin.last()
 
-    val nextY = pieceY + if (piece == 'W') 1 else -1
-    val secondNextY = pieceY + if (piece == 'W') 2 else -2
-
-
-    val leftX: Char? = if (pieceX == 'a') null else {
-        columnAsChar(columnAsNumber(pieceX)-1)
-    }
-    val rightX: Char? = if (pieceX == 'h') null else {
-        columnAsChar(columnAsNumber(pieceX)+1)
-    }
+    val nextY = getNextY(pieceY.digitToInt(), piece)
 
     val hasntMoved: Boolean = when (piece) {
         'W' -> pieceY == '2'
@@ -161,7 +165,7 @@ fun getPossibleCaptures(origin: String): Array<String> {
     val pieceX = origin.first()
     val pieceY = origin.last()
 
-    val nextY = pieceY + if (piece == 'W') 1 else -1
+    val nextY = getNextY(pieceY.digitToInt(), piece)
 
     val leftX: Char? = if (pieceX == 'a') null else {
         columnAsChar(columnAsNumber(pieceX)-1)
@@ -188,8 +192,8 @@ fun getPossibleEnPassants(origin: String): Array<String> {
     val pieceX = origin.first()
     val pieceY = origin.last()
 
-    val nextY = pieceY + if (piece == 'W') 1 else -1
-    val secondNextY = pieceY + if (piece == 'W') 2 else -2
+    val nextY = getNextY(pieceY.digitToInt(), piece)
+    val secondNextY = getNextY(nextY, piece)
 
     val leftX: Char? = if (pieceX == 'a') null else {
         columnAsChar(columnAsNumber(pieceX)-1)
