@@ -38,13 +38,14 @@ fun showMenu() {
 
         if (checkWinner() != null) {
             val winner = checkWinner()
-            if (winner == 'S') { //Stalemate
-                println("Stalemate!")
-            } else {
-                val winner = if (winner == 'W') "White" else "Black"
-                println("$winner Wins!")
-            }
+            val winningTeam = if (winner == 'W') "White" else "Black"
+            println("$winningTeam Wins!")
             println("Bye!")
+            break
+        }
+
+        if (checkStalemate()) {
+            println("Stalemate!\nBye!")
             break
         }
 
@@ -108,7 +109,33 @@ fun checkWinner(): Char? {
     if (amountB == 0) return 'W'
 
     return null
+}
 
+fun checkStalemate(): Boolean {
+
+    var stalemate = true
+
+    for (y in 0 until cb.size) {
+        val line = cb[y]
+        for (x in 0 until line.size) {
+
+            val y = y+2
+
+            val regexLocation = locationToRegex(arrayOf(x,y))
+
+            if (getPiece(regexLocation) == currentPiece) {
+//                println("Checking status of $regexLocation, which is a ${getPiece(regexLocation)}")
+
+                val possibleMoves = getPossibleDestinations(regexLocation)
+
+//                println("$regexLocation's moves are ${possibleMoves.joinToString(" ")}")
+
+                if (possibleMoves.isNotEmpty()) stalemate = false
+            }
+        }
+    }
+
+    return stalemate
 }
 
 fun makeMove(move: String) {
@@ -303,6 +330,19 @@ fun regexToLocation(location: String): Array<Int> {
     } else {
         arrayOf()
     }
+}
+
+fun locationToRegex(location: Array<Int>): String {
+    if (location.size != 2) return ""
+
+    val x = location[0]
+    val y = location[1]
+
+    val xName = columnAsChar(x)
+    val yName = y-1 //location = [0,7], not [1,8]
+
+    return "$xName$yName"
+
 }
 
 fun copyBoard(board: MutableList<MutableList<Char>>): MutableList<MutableList<Char>> {
