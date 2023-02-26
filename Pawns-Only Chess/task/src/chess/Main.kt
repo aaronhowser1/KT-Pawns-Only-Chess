@@ -23,6 +23,7 @@ val currentPiece: Char
 val oppositePiece: Char
     get() = if (playerOnesTurn) 'B' else 'W'
 
+
 fun main() {
     showMenu()
 }
@@ -34,6 +35,19 @@ fun showMenu() {
     drawChessboard()
 
     while (true) {
+
+        if (checkWinner() != null) {
+            val winner = checkWinner()
+            if (winner == 'S') { //Stalemate
+                println("Stalemate!")
+            } else {
+                val winner = if (winner == 'W') "White" else "Black"
+                println("$winner Wins!")
+            }
+            println("Bye!")
+            break
+        }
+
         val currentPlayer = if (playerOnesTurn) player1 else player2
         val input = inputFromPrompt("$currentPlayer's turn:")
         if (input == "exit") {
@@ -73,9 +87,28 @@ fun getLine(line: Int, board: MutableList<MutableList<Char>>): String {
     return "$line | ${board[line-1].joinToString(" | ")} |"
 }
 
-fun inputFromPrompt(prompt: String): String {
-    println(prompt)
-    return readln()
+fun checkWinner(): Char? {
+    val line8 = cb[7]
+    val line1 = cb[0]
+
+    if (line8.contains('W')) return 'W'
+    if (line1.contains('B')) return 'B'
+
+    var amountW = 0
+    var amountB = 0
+
+    for (i in cb) for (j in i) {
+        when (j) {
+            'W' -> amountW++
+            'B' -> amountB++
+        }
+    }
+
+    if (amountW == 0) return 'B'
+    if (amountB == 0) return 'W'
+
+    return null
+
 }
 
 fun makeMove(move: String) {
@@ -282,4 +315,9 @@ fun copyBoard(board: MutableList<MutableList<Char>>): MutableList<MutableList<Ch
     }
 
     return boardCopy
+}
+
+fun inputFromPrompt(prompt: String): String {
+    println(prompt)
+    return readln()
 }
