@@ -4,10 +4,10 @@ package chess
 // on the board the lowest is at bottom
 val cb = mutableListOf(
     mutableListOf(' ',' ',' ',' ',' ',' ',' ',' '),
-    mutableListOf('W','W','W','W','W','W','W','W'),
+    mutableListOf('W',' ','W','W','W','W','W','W'),
     mutableListOf(' ',' ',' ',' ',' ',' ',' ',' '),
     mutableListOf(' ',' ',' ',' ',' ',' ',' ',' '),
-    mutableListOf(' ',' ',' ',' ',' ',' ',' ',' '),
+    mutableListOf(' ','W',' ',' ',' ',' ',' ',' '),
     mutableListOf(' ',' ',' ',' ',' ',' ',' ',' '),
     mutableListOf('B','B','B','B','B','B','B','B'),
     mutableListOf(' ',' ',' ',' ',' ',' ',' ',' ')
@@ -16,6 +16,7 @@ val cb = mutableListOf(
 var prevCB = copyBoard(cb)
 
 var playerOnesTurn = true
+var enPassanted = false
 
 val currentPiece: Char
     get() = if (playerOnesTurn) 'W' else 'B'
@@ -86,15 +87,12 @@ fun makeMove(move: String) {
 
         if (currentPiece == getPiece(origin)) {
             if (getPossibleDestinations(origin).contains(destination)) {
+                prevCB = copyBoard(cb)
                 setPiece(origin,' ')
                 setPiece(destination, currentPiece)
 
-                //En Passant
-                if (origin.first() != destination.first()) setPiece("${destination[0]}${origin[1]}",' ')
-
                 drawChessboard(cb)
                 playerOnesTurn = !playerOnesTurn
-                prevCB = copyBoard(cb)
             } else {
                 println("Invalid Input")
             }
@@ -123,7 +121,7 @@ fun setPiece(location: String, piece: Char) {
     cb[locationArray[0]][locationArray[1]] = piece
 }
 
-fun getPossibleDestinations(origin: String): Array<String> {
+fun getPossibleForwards(origin: String): Array<String> {
     val piece = getPiece(origin)
 
     val pieceX = origin.first()
@@ -154,6 +152,23 @@ fun getPossibleDestinations(origin: String): Array<String> {
         if (getPiece(oneForward) == ' ') {
             if (hasntMoved && getPiece(twoForward) == ' ') arrayOf(oneForward,twoForward) else arrayOf(oneForward)
         } else arrayOf()
+    return forward
+}
+
+fun getPossibleCaptures(origin: String): Array<String> {
+    val piece = getPiece(origin)
+
+    val pieceX = origin.first()
+    val pieceY = origin.last()
+
+    val nextY = pieceY + if (piece == 'W') 1 else -1
+
+    val leftX: Char? = if (pieceX == 'a') null else {
+        columnAsChar(columnAsNumber(pieceX)-1)
+    }
+    val rightX: Char? = if (pieceX == 'h') null else {
+        columnAsChar(columnAsNumber(pieceX)+1)
+    }
 
     val diagonalLeft = "$leftX$nextY"
     val diagonalRight = "$rightX$nextY"
@@ -162,6 +177,29 @@ fun getPossibleDestinations(origin: String): Array<String> {
     var capturingDiagonals = arrayOf<String>()
     if (!diagonalLeft.contains("null")) if (getPiece(diagonalLeft) == oppositePiece) capturingDiagonals+=arrayOf(diagonalLeft)
     if (!diagonalRight.contains("null")) if (getPiece(diagonalRight) == oppositePiece) capturingDiagonals+=arrayOf(diagonalRight)
+
+    return capturingDiagonals
+}
+
+fun getPossibleEnPassants(origin: String): Array<String> {
+
+    val piece = getPiece(origin)
+
+    val pieceX = origin.first()
+    val pieceY = origin.last()
+
+    val nextY = pieceY + if (piece == 'W') 1 else -1
+    val secondNextY = pieceY + if (piece == 'W') 2 else -2
+
+    val leftX: Char? = if (pieceX == 'a') null else {
+        columnAsChar(columnAsNumber(pieceX)-1)
+    }
+    val rightX: Char? = if (pieceX == 'h') null else {
+        columnAsChar(columnAsNumber(pieceX)+1)
+    }
+
+    val diagonalLeft = "$leftX$nextY"
+    val diagonalRight = "$rightX$nextY"
 
     //To be checked on prevCB, not cb
     val enPassantLeft = "$leftX${secondNextY}"
@@ -172,19 +210,25 @@ fun getPossibleDestinations(origin: String): Array<String> {
     if (!diagonalLeft.contains("null")) {
         if (getPiece(enPassantLeft, prevCB) == oppositePiece) {
             if (getPiece("$leftX$pieceY") == oppositePiece) {
-                enPassant+=arrayOf(enPassantLeft)
+                enPassant+=arrayOf(diagonalLeft)
             }
         }
     }
     if (!diagonalRight.contains("null")) {
         if (getPiece(enPassantRight, prevCB) == oppositePiece) {
             if (getPiece("$rightX$pieceY") == oppositePiece) {
-                enPassant+=arrayOf(enPassantRight)
+                enPassant+=arrayOf(diagonalRight)
             }
         }
     }
 
-    return forward.plus(capturingDiagonals).plus(enPassant)
+    return enPassant
+
+}
+
+fun getPossibleDestinations(origin: String): Array<String> {
+
+    return getPossibleForwards(origin).plus(getPossibleCaptures(origin)).plus(getPossibleEnPassants(origin))
 
 }
 
